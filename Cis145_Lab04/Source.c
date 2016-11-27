@@ -6,13 +6,13 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define MAX_COUNT 30
 #define FILE_ERROR "There was an error opening the file"
-#define NUMBER_OF_LABS 8
-#define NUMBER_OF_EXAMS 3
+#define NUMBER_OF_LABS 1
+#define NUMBER_OF_EXAMS 1
 #define LABS_WEIGHT .4f
 #define EXAMS_WEIGHT .4f
 #define FINAL_WEIGHT .2f
-#define GPA_FILE "StudentsByGpa.txt"
-#define NAMES_FILE "StudentsByName.txt"
+#define GPA_TXT_FILE "StudentsByGpa.txt"
+#define NAMES_TXT_FILE "StudentsByName.txt"
 #define MENU_DEFAULT ""
 #include<stdio.h>
 #include<stdlib.h>
@@ -34,14 +34,23 @@ void calcLetterGrade(float, char *);
 void enterStudents(STUDENTS[], int *);
 void sortByName(STUDENTS[], int);
 void sortByGpa(STUDENTS[], int);
-void displayStudents(STUDENTS[], int);
+void displayStudents(STUDENTS[], int, char[] );
 void writeStudents(STUDENTS[], int, char[]);
+void loadClass(STUDENTS[], int *, char[]);
+void writeClass(STUDENTS[], int, char[]);
 
-int main()
+int main(int argc, char *argv[])
 {
+  char className[20];
+  char classFileName[24];
   int selection = 0;
   STUDENTS students[30];
   int studentCount = 0;
+
+  strcpy(className, argv[01]);
+  sprintf(classFileName, "%s.dat", argv[01]);
+ 
+  loadClass(students, &studentCount, classFileName);
   // Display the menu
   do {
     printf("\nSelect an Option (0-5)\n");
@@ -62,16 +71,16 @@ int main()
     case 1: enterStudents(students, &studentCount);
       break;
     case 2: sortByGpa(students, studentCount);
-      displayStudents(students, studentCount);
+      displayStudents(students, studentCount, className);
       break;
     case 3: sortByGpa(students, studentCount);
-      writeStudents(students, studentCount, GPA_FILE);
+      writeStudents(students, studentCount, GPA_TXT_FILE);
       break;
     case 4: sortByName(students, studentCount);
-      displayStudents(students, studentCount);
+      displayStudents(students, studentCount, className);
       break;
     case 5: sortByName(students, studentCount);
-      writeStudents(students, studentCount, NAMES_FILE);
+      writeStudents(students, studentCount, NAMES_TXT_FILE);
       break;
     default: printf("Enter 0-5");
       break;
@@ -79,6 +88,7 @@ int main()
     }
   } while (selection);
 
+  writeClass(students, studentCount, classFileName);
   return(0);
 }
 
@@ -182,13 +192,14 @@ void sortByGpa(STUDENTS students[], int studentCount)
 /* 
   Displays a report of students names, percent grade, and letter grade
 */
-void displayStudents(STUDENTS students[], int studentCount)
+void displayStudents(STUDENTS students[], int studentCount, char className[])
 {
+  printf("\n\nDisplaying grades for %s\n\n", className);
   int i;
   printf("%-30s %-10s %-15s", "Name", "% Grade", "Letter Grade\n");
   for (i = 0; i < studentCount; i++)
   {
-    printf("\n%-10s%-20s%6.2f % 10c", students[i].firstName, students[i].lastName, students[i].percentGrade, students[i].letterGrade);
+    printf("\n%-10s%-20s%6.2f % 10c", students[i].lastName, students[i].firstName, students[i].percentGrade, students[i].letterGrade);
   }
   printf("\n\nTotal Students - %d", studentCount);
 }
@@ -213,7 +224,7 @@ void writeStudents(STUDENTS students[], int studentCount, char file[])
   fprintf(rpt, "%-30s %-10s %-15s", "Name", "% Grade", "Letter Grade\n");
   for (i = 0; i < studentCount; i++)
   {
-    fprintf(rpt, "\n%-10s%-20s%6.2f % 10c", students[i].firstName, students[i].lastName, students[i].percentGrade, students[i].letterGrade);
+    fprintf(rpt, "\n%-10s%-20s%6.2f % 10c", students[i].lastName, students[i].firstName, students[i].percentGrade, students[i].letterGrade);
   }
   fprintf(rpt, "\n\nTotal Students - %d", studentCount);
   fclose(rpt);
@@ -304,4 +315,50 @@ void calcLetterGrade(float percentGrade, char *ptr_letterGrade)
     *ptr_letterGrade = 'D';
   else
     *ptr_letterGrade = 'F';
+}
+
+/* Load the data from existing class file. */
+void loadClass(STUDENTS students[], int *ptr_studentCount, char classFileName[])
+{
+  FILE * fptr;
+  fptr = fopen(classFileName, "rb");
+  int i = 0;
+  int rc;
+  if (fptr != NULL)
+  {
+   
+    fread(&students[i], sizeof(STUDENTS), 1, fptr);
+    while (!feof(fptr))
+    {
+      i++;
+      printf("\nreading the next student");
+      fread(&students[i], sizeof(STUDENTS), 1, fptr);
+    }
+    
+    *ptr_studentCount = i;
+  }
+  fclose(fptr);
+  printf("%d", i);
+}
+
+/* Write the class to a data file */
+void writeClass(STUDENTS students[], int studentCount, char classFileName[])
+{
+  FILE * fptr;
+  int i = 0;
+  fptr = fopen(classFileName, "wb");
+
+  if (fptr == NULL)
+  {
+    printf("Error opening the file");
+    system("pause");
+    return;
+  }
+
+  for (i = 0; i<studentCount; i++)
+  {
+    fwrite(&students[i], sizeof(STUDENTS), 1, fptr);
+  }
+
+  fclose(fptr);
 }
